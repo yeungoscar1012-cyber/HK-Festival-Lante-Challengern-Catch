@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK Festival: Lante Challengern Catch</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a2e;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 450px;
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+            border: 4px solid #ffd700;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        #dragon-player {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            width: 80px;
+            height: 50px;
+            background: #e63946;
+            border-radius: 20px;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px #ff4d4d;
+            z-index: 10;
+        }
+
+        .lantern {
+            position: absolute;
+            width: 30px;
+            height: 40px;
+            background: #ffb703;
+            border-radius: 5px;
+            box-shadow: 0 0 15px #ffd700;
+        }
+
+        #score-board {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 24px;
+            color: #ffd700;
+        }
+
+        #timer {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+        }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score-board">Lanterns: 0</div>
+        <div id="timer">Time: 30</div>
+        <div id="dragon-player"></div>
+        
+        <div id="start-screen" class="message" style="display: block;">
+            <h1>HK Lantern Catch</h1>
+            <p>Move your mouse/finger to catch the falling lanterns!</p>
+            <p>If you want to support this web game, please donate us to AliayHK 6213 8299.</p>
+            <button onclick="startGame()" style="padding: 10px 20px; cursor: pointer;">Start Festival</button>
+        </div>
+
+        <div id="game-over" class="message">
+            <h1>Festival Ended!</h1>
+            <p id="final-score"></p>
+            <button onclick="location.reload()" style="padding: 10px 20px; cursor: pointer;">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('game-container');
+        const player = document.getElementById('dragon-player');
+        const scoreBoard = document.getElementById('score-board');
+        const timerDisplay = document.getElementById('timer');
+        
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = false;
+
+        // Move player with mouse
+        container.addEventListener('mousemove', (e) => {
+            if (!gameActive) return;
+            let rect = container.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            if (x > 40 && x < 760) {
+                player.style.left = x + 'px';
+            }
+        });
+
+        function spawnLantern() {
+            if (!gameActive) return;
+
+            const lantern = document.createElement('div');
+            lantern.classList.add('lantern');
+            lantern.style.left = Math.random() * 770 + 'px';
+            lantern.style.top = '-50px';
+            container.appendChild(lantern);
+
+            let fallInterval = setInterval(() => {
+                let top = parseInt(lantern.style.top);
+                lantern.style.top = (top + 5) + 'px';
+
+                // Collision detection
+                let pRect = player.getBoundingClientRect();
+                let lRect = lantern.getBoundingClientRect();
+
+                if (lRect.bottom >= pRect.top && 
+                    lRect.right >= pRect.left && 
+                    lRect.left <= pRect.right) {
+                    score++;
+                    scoreBoard.innerText = `Lanterns: ${score}`;
+                    lantern.remove();
+                    clearInterval(fallInterval);
+                }
+
+                if (top > 450) {
+                    lantern.remove();
+                    clearInterval(fallInterval);
+                }
+            }, 20);
+
+            setTimeout(spawnLantern, 800);
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            gameActive = true;
+            score = 0;
+            timeLeft = 30;
+            
+            spawnLantern();
+
+            let countdown = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `Time: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            document.getElementById('game-over').style.display = 'block';
+            document.getElementById('final-score').innerText = `You collected ${score} lanterns!`;
+        }
+    </script>
+</body>
+</html>
